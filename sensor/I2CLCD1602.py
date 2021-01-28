@@ -10,7 +10,7 @@ from Adafruit_LCD1602 import Adafruit_CharLCD
 import smbus
 from time import sleep, strftime
 from datetime import datetime
-from sensor import *
+from sensor import SensorData
  
 def get_cpu_temp():     # get CPU temperature and store it into file "/sys/class/thermal/thermal_zone0/temp"
     tmp = open('/sys/class/thermal/thermal_zone0/temp')
@@ -18,21 +18,6 @@ def get_cpu_temp():     # get CPU temperature and store it into file "/sys/class
     tmp.close()
     return '{:.2f}'.format( float(cpu)/1000 ) + ' C'
 
-def getSensorData() -> SensorData:
-    data = SensorData
-    
-    bus = smbus.SMBus(DEVICE_BUS)
-
-    aReceiveBuf = []
-
-    aReceiveBuf.append(0x00) 
-
-    for i in range(TEMP_REG,HUMAN_DETECT + 1):
-        aReceiveBuf.append(bus.read_byte_data(DEVICE_ADDR, i))
-
-    data = SensorData.create(aReceiveBuf)
-    data.print()
- 
 def get_time_now():     # get system time
     return datetime.now().strftime('    %H:%M:%S')
     
@@ -42,7 +27,9 @@ def loop():
     while(True):         
         #lcd.clear()
         lcd.setCursor(0,0)  # set cursor position
-        lcd.message( 'CPU: ' + get_cpu_temp()+'\n' )# display CPU temperature
+        sensorData = SensorData.create()        
+        lcd.message( 'Temperature: ' + sensorData.temperature + '\n' ) # display CPU temperature
+        #lcd.message( 'CPU: ' + get_cpu_temp()+'\n' )# display CPU temperature
         lcd.message( get_time_now() )   # display the time
         sleep(1)
         

@@ -1,4 +1,5 @@
 from typing import List
+import smbus
 
 DEVICE_BUS = 1
 DEVICE_ADDR = 0x17
@@ -28,9 +29,9 @@ class SensorData:
 
     offChipTemperature: str
     
-    temperature: str
-    brightness: str
-    humidity: str
+    temperature: int
+    brightness: int
+    humidity: int
     
     barometerTemperature: int
     barometerPressure: int
@@ -47,7 +48,17 @@ class SensorData:
         return
 
     @staticmethod
-    def create(buffer:list[int]) -> SensorData:
+    def getRawdata() -> List[int]:
+   
+        bus = smbus.SMBus(DEVICE_BUS)
+        aReceiveBuf = [0x00]
+
+        for i in range(TEMP_REG,HUMAN_DETECT + 1):
+            aReceiveBuf.append(bus.read_byte_data(DEVICE_ADDR, i))
+        return aReceiveBuf
+
+    @staticmethod
+    def parse(buffer:list[int]) -> SensorData:
         data = SensorData()
             
         # off-chip sensor temperature
@@ -86,19 +97,32 @@ class SensorData:
         data.humansDetected = aReceiveBuf[HUMAN_DETECT] == 1
 
         return data
+
+    @staticmethod
+    def create() -> SensorData:
+        rawSetsorData = SensorData.getRawdata()
         
-        def print() -> None:
+        return parse(rawSetsorData)
+        
+    def print() -> None:
 
-            print("barometer temperature = %d Celsius" % data.barometerTemperature)
-            print("barometer pressure = %d pascal" % data.barometerPressure)
+        print("barometer temperature = %d Celsius" % data.barometerTemperature)
+        print("barometer pressure = %d pascal" % data.barometerPressure)
     
-            print("on-board brightness sensor = %d Lux" % data.brightness)
-            print("on-board sensor temperature = %d Celsius" % data.temperature)
-            print("on-board sensor humidity = %d %%" % data.humidity)
+        print("on-board brightness sensor = %d Lux" % data.brightness)
+        print("on-board sensor temperature = %d Celsius" % data.temperature)
+        print("on-board sensor humidity = %d %%" % data.humidity)
 
-            print("off-chip sensor temperature = %d Celsius" % data.offChipTemperature)
+        print("off-chip sensor temperature = %d Celsius" % data.offChipTemperature)
 
-            for error in errors:
-                print(error)
+        for error in errors:
+            print(error)
         return
 
+if __name__ == '__main__':
+    print ('Program is starting ... ')
+    try:
+        sensorData = SensorData.create()
+        sensorData.print()
+    except KeyboardInterrupt:
+        destroy()
