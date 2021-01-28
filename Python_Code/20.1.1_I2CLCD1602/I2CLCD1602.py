@@ -7,6 +7,7 @@
 ########################################################################
 from PCF8574 import PCF8574_GPIO
 from Adafruit_LCD1602 import Adafruit_CharLCD
+from gpiozero import LED
 
 from time import sleep, strftime
 from datetime import datetime
@@ -23,11 +24,15 @@ def get_time_now():     # get system time
 def loop():
     mcp.output(3,1)     # turn on LCD backlight
     lcd.begin(16,2)     # set number of LCD lines and columns
+    led = LED(17)
+    
     while(True):         
         #lcd.clear()
+        led.on() 
         lcd.setCursor(0,0)  # set cursor position
         lcd.message( 'CPU: ' + get_cpu_temp()+'\n' )# display CPU temperature
         lcd.message( get_time_now() )   # display the time
+        led.off() 
         sleep(1)
         
 def destroy():
